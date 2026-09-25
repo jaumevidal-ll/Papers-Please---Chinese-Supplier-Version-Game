@@ -18,7 +18,7 @@
 		</data>
 		<key>Resources/game/assets/vendor/CC-CEDICT-NOTICE.md</key>
 		<data>
-		dFJkNLzIdCvGsc6cpBSPmk5idCg=
+		M6CHmrRodaTY+qrFPRVGpS2kmi0=
 		</data>
 		<key>Resources/game/assets/vendor/pinyin-pro/LICENSE</key>
 		<data>
@@ -38,15 +38,23 @@
 		</data>
 		<key>Resources/game/index.html</key>
 		<data>
-		DaYLmeb05W+5JUncvxfGILeEOzw=
+		4OYLEaPCvNtyTTrfQBv2RFe5Bbk=
 		</data>
 		<key>Resources/game/reading-layer.js</key>
 		<data>
-		yqw1Ix6VoEbdibmSJYhAP37Zknw=
+		ny+Dh+NMJcv8h4BXljz1EwW6NIA=
+		</data>
+		<key>Resources/game/reading-words.js</key>
+		<data>
+		ls6efrcGPpiq9zYJKG/0++0omdY=
 		</data>
 		<key>Resources/game/styles.css</key>
 		<data>
-		iBkjy960JEveYfagUrPrulZUqRw=
+		1DKkFRVr6/2kAroXQlwycWhpBOQ=
+		</data>
+		<key>Resources/game/word-meanings.js</key>
+		<data>
+		DvBPpWscvfq0vXWlauAmKhhFTUA=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -88,11 +96,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			dFJkNLzIdCvGsc6cpBSPmk5idCg=
+			M6CHmrRodaTY+qrFPRVGpS2kmi0=
 			</data>
 			<key>hash2</key>
 			<data>
-			Nr+NumuKt+xKnRCMNYL/fFYmVjawbiHPg9b3IXa3TYU=
+			y9sof5Zv9eHlZ8PyCLFPKHDcaNym88DE0G6E+DXraG0=
 			</data>
 		</dict>
 		<key>Resources/game/assets/vendor/pinyin-pro/LICENSE</key>
@@ -143,33 +151,55 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			DaYLmeb05W+5JUncvxfGILeEOzw=
+			4OYLEaPCvNtyTTrfQBv2RFe5Bbk=
 			</data>
 			<key>hash2</key>
 			<data>
-			NJ7JQwIkrJ6kDCEWhKmmNPFVlg94XkcpX1jKz9LVUzc=
+			Hih9fWB9L+0FmEPb04SsNLRcCAhwyTL0VJRvxexQwOo=
 			</data>
 		</dict>
 		<key>Resources/game/reading-layer.js</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			yqw1Ix6VoEbdibmSJYhAP37Zknw=
+			ny+Dh+NMJcv8h4BXljz1EwW6NIA=
 			</data>
 			<key>hash2</key>
 			<data>
-			n/1IshPXGSfSDU6nYxkc9hbiSuj+r9Yap1cxUWBlltk=
+			zsT2Cx9MeWf2iv3RdIMl3w5pr3wO5PiwB8jAKdClqlE=
+			</data>
+		</dict>
+		<key>Resources/game/reading-words.js</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ls6efrcGPpiq9zYJKG/0++0omdY=
+			</data>
+			<key>hash2</key>
+			<data>
+			0KZmKvTCEeWMVC33ME5v2a6HvU0Z9Y8fVFbVW0JamkI=
 			</data>
 		</dict>
 		<key>Resources/game/styles.css</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			iBkjy960JEveYfagUrPrulZUqRw=
+			1DKkFRVr6/2kAroXQlwycWhpBOQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			RXOn3Mr3Px4D31ADJDVmoV7n5YvSduQt6bzcym5PSNs=
+			Bu1vPCQzTDsxP0UVqm8dfRSlVxMrzYogjfaPBt5EmaE=
+			</data>
+		</dict>
+		<key>Resources/game/word-meanings.js</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			DvBPpWscvfq0vXWlauAmKhhFTUA=
+			</data>
+			<key>hash2</key>
+			<data>
+			7kIxN0G0c0NSsRNV0VYMH67AxcDCZdICb/wQs1khzAo=
 			</data>
 		</dict>
 	</dict>

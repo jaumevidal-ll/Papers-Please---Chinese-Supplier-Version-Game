@@ -4,12 +4,14 @@
   const HANZI_PATTERN = /[\u3400-\u9fff]/;
   const HANZI_RUN_PATTERN = /[\u3400-\u9fff]+/g;
   const SKIP_SELECTOR =
-    ".hanzi-character, .sentence-pinyin, .hanzi-hover-card, [data-reading-skip], script, style, noscript, textarea";
+    ".hanzi-word, .hanzi-character, .sentence-pinyin, .hanzi-hover-card, [data-reading-skip], script, style, noscript, textarea";
   const meanings = window.HANZI_MEANINGS || {};
+  const wordMeanings = window.WORD_MEANINGS || {};
+  const splitChineseRun = window.READING_WORDS?.splitChineseRun;
   const pinyin = window.pinyinPro?.pinyin;
 
-  if (!pinyin) {
-    console.warn("Mandarin reading layer could not start because pinyin-pro is unavailable.");
+  if (!pinyin || !splitChineseRun) {
+    console.warn("Mandarin reading layer could not start because its language data is unavailable.");
     return;
   }
 
@@ -18,16 +20,22 @@
   let touchHideTimer = null;
 
   const tooltip = document.createElement("div");
+  tooltip.id = "reading-word-tooltip";
   tooltip.className = "hanzi-hover-card";
   tooltip.setAttribute("role", "tooltip");
   tooltip.setAttribute("aria-hidden", "true");
   tooltip.dataset.readingSkip = "true";
   tooltip.innerHTML = `
-    <span class="hover-glyph"></span>
-    <span class="hover-details">
-      <strong class="hover-pinyin"></strong>
-      <span class="hover-meaning"></span>
+    <span class="hover-word-row">
+      <span class="hover-glyph"></span>
+      <span class="hover-details">
+        <span class="hover-label">WORD</span>
+        <strong class="hover-pinyin"></strong>
+        <span class="hover-meaning"></span>
+      </span>
     </span>
+    <span class="hover-breakdown-label">CHARACTER MEANINGS</span>
+    <span class="hover-breakdown"></span>
   `;
   document.body.appendChild(tooltip);
 
@@ -55,7 +63,11 @@
     });
   }
 
-  function buildHanziRun(text) {
+  function shortMeaning(value) {
+    return (value || "Chinese character").split("; ").slice(0, 2).join("; ").slice(0, 90);
+  }
+
+  function buildHanziRun(text, insideButton) {
     const fragment = document.createDocumentFragment();
     const details = pinyin(text, {
       type: "all",
@@ -63,16 +75,35 @@
       toneType: "symbol",
     });
 
-    Array.from(text).forEach((character, index) => {
-      const reading = details[index]?.pinyin || pinyin(character);
-      const meaning = meanings[character] || "Chinese character";
-      const span = document.createElement("span");
-      span.className = "hanzi-character";
-      span.dataset.character = character;
-      span.dataset.pinyin = reading;
-      span.dataset.meaning = meaning;
-      span.textContent = character;
-      fragment.appendChild(span);
+    let offset = 0;
+    splitChineseRun(text, wordMeanings).forEach((word) => {
+      const wordSpan = document.createElement("span");
+      const characters = Array.from(word);
+      const reading = details.slice(offset, offset + characters.length)
+        .map((part, index) => part?.pinyin || pinyin(characters[index]))
+        .join(" ");
+      const meaning = wordMeanings[word] || meanings[word] ||
+        "No whole-word translation available; see character meanings below.";
+      wordSpan.className = "hanzi-word";
+      wordSpan.dataset.word = word;
+      wordSpan.dataset.pinyin = reading;
+      wordSpan.dataset.meaning = meaning;
+      if (!insideButton) {
+        wordSpan.tabIndex = 0;
+        wordSpan.setAttribute("aria-describedby", tooltip.id);
+      }
+
+      characters.forEach((character, index) => {
+        const charSpan = document.createElement("span");
+        charSpan.className = "hanzi-character";
+        charSpan.dataset.character = character;
+        charSpan.dataset.pinyin = details[offset + index]?.pinyin || pinyin(character);
+        charSpan.dataset.meaning = meanings[character] || "Chinese character";
+        charSpan.textContent = character;
+        wordSpan.appendChild(charSpan);
+      });
+      offset += characters.length;
+      fragment.appendChild(wordSpan);
     });
 
     return fragment;
@@ -91,7 +122,7 @@
     for (const match of value.matchAll(HANZI_RUN_PATTERN)) {
       const start = match.index || 0;
       if (start > cursor) source.appendChild(document.createTextNode(value.slice(cursor, start)));
-      source.appendChild(buildHanziRun(match[0]));
+      source.appendChild(buildHanziRun(match[0], Boolean(node.parentElement?.closest("button"))));
       cursor = start + match[0].length;
     }
 
@@ -170,11 +201,28 @@
   }
 
   function showTooltip(target) {
-    if (!(target instanceof Element) || !target.matches(".hanzi-character")) return;
+    if (!(target instanceof Element) || !target.matches(".hanzi-word")) return;
     window.clearTimeout(touchHideTimer);
-    tooltip.querySelector(".hover-glyph").textContent = target.dataset.character || target.textContent;
+    tooltip.querySelector(".hover-glyph").textContent = target.dataset.word || target.textContent;
     tooltip.querySelector(".hover-pinyin").textContent = target.dataset.pinyin || "";
-    tooltip.querySelector(".hover-meaning").textContent = target.dataset.meaning || "Chinese character";
+    tooltip.querySelector(".hover-meaning").textContent = target.dataset.meaning || "";
+    const breakdown = tooltip.querySelector(".hover-breakdown");
+    breakdown.replaceChildren();
+    target.querySelectorAll(":scope > .hanzi-character").forEach((character) => {
+      const row = document.createElement("span");
+      row.className = "hover-character-row";
+      for (const [className, value] of [
+        ["hover-character-glyph", character.dataset.character],
+        ["hover-character-pinyin", character.dataset.pinyin],
+        ["hover-character-meaning", shortMeaning(character.dataset.meaning)],
+      ]) {
+        const part = document.createElement("span");
+        part.className = className;
+        part.textContent = value || "";
+        row.appendChild(part);
+      }
+      breakdown.appendChild(row);
+    });
     tooltip.classList.add("visible");
     tooltip.setAttribute("aria-hidden", "false");
     positionTooltip(target);
@@ -194,23 +242,32 @@
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
   document.addEventListener("pointerover", (event) => {
-    const character = event.target.closest?.(".hanzi-character");
-    if (character) showTooltip(character);
+    const word = event.target.closest?.(".hanzi-word");
+    if (word) showTooltip(word);
   });
 
   document.addEventListener("pointerout", (event) => {
-    const character = event.target.closest?.(".hanzi-character");
-    if (character && !character.contains(event.relatedTarget)) hideTooltip();
+    const word = event.target.closest?.(".hanzi-word");
+    if (word && !word.contains(event.relatedTarget)) hideTooltip();
   });
 
   document.addEventListener("click", (event) => {
-    const character = event.target.closest?.(".hanzi-character");
-    if (!character || character.closest("button")) {
+    const word = event.target.closest?.(".hanzi-word");
+    if (!word || word.closest("button")) {
       hideTooltip();
       return;
     }
-    showTooltip(character);
-    touchHideTimer = window.setTimeout(hideTooltip, 2400);
+    showTooltip(word);
+    touchHideTimer = window.setTimeout(hideTooltip, 4000);
+  });
+
+  document.addEventListener("focusin", (event) => {
+    const word = event.target.closest?.(".hanzi-word");
+    if (word) showTooltip(word);
+  });
+
+  document.addEventListener("focusout", (event) => {
+    if (event.target.closest?.(".hanzi-word")) hideTooltip();
   });
 
   window.addEventListener("scroll", hideTooltip, { passive: true });

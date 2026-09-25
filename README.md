@@ -13,4 +13,6 @@ Then visit `http://localhost:8765`.
 
 On macOS, the bundled `desktop-app/CCCP Paperwork.app` starts the server automatically and opens the game in the default browser.
 
-The game includes Mandarin text, sentence-level pinyin, and hover glosses for individual Hanzi. Its fictional paperwork follows the common structure of purchase orders, commercial invoices, packing lists, and bills of lading for training purposes.
+The game includes Mandarin text, sentence-level pinyin, and word hover cards showing an English translation plus the pinyin and meaning of each character. Unknown names and expressions fall back to individual character glosses. Its fictional paperwork follows the common structure of purchase orders, commercial invoices, packing lists, and bills of lading for training purposes.
+
+Word glosses are a reduced CC-CEDICT subset tailored to the game text. To regenerate them from a CC-CEDICT download, run `node scripts/build-word-meanings.js path/to/cedict_1_0_ts_utf-8_mdbg.txt.gz`. See [dictionary attribution](assets/vendor/CC-CEDICT-NOTICE.md).

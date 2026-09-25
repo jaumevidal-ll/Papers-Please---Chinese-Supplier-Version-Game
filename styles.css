@@ -1762,22 +1762,30 @@ button:focus-visible,
   min-width: 0;
 }
 
-.hanzi-character {
+.hanzi-word {
   display: inline !important;
-  padding: 0 0.015em;
   border-radius: 2px;
   cursor: help;
   text-decoration: underline dotted rgba(152, 112, 49, 0.48);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.16em;
-  transition: none;
 }
 
-.hanzi-character:hover {
+.hanzi-character {
+  display: inline !important;
+}
+
+.hanzi-word:hover,
+.hanzi-word:focus-visible {
   background: var(--amber-hi);
   color: #251d12;
   box-shadow: 0 0 0 2px var(--amber-hi);
   text-decoration-color: transparent;
+}
+
+.hanzi-word:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
 }
 
 .sentence-pinyin {
@@ -1849,12 +1857,10 @@ button.has-mandarin-reading {
 .hanzi-hover-card {
   position: fixed;
   z-index: 4000;
-  display: grid;
-  grid-template-columns: 42px minmax(120px, 1fr);
-  gap: 10px;
+  display: block;
   width: max-content;
-  max-width: min(290px, calc(100vw - 20px));
-  padding: 9px 11px;
+  max-width: min(390px, calc(100vw - 20px));
+  padding: 10px 12px;
   border: 2px solid var(--amber-hi);
   background: #101715;
   color: var(--cream);
@@ -1872,16 +1878,25 @@ button.has-mandarin-reading {
   visibility: visible;
 }
 
+.hover-word-row {
+  display: grid;
+  grid-template-columns: minmax(42px, max-content) minmax(135px, 1fr);
+  gap: 10px;
+}
+
 .hover-glyph {
   display: grid;
   min-height: 42px;
+  max-width: 112px;
+  padding: 4px;
   place-items: center;
   border: 1px solid #6f795f;
   background: #28312f;
   color: var(--amber-hi);
   font-family: var(--paper-font);
-  font-size: 28px;
-  line-height: 1;
+  font-size: 25px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .hover-details {
@@ -1889,6 +1904,15 @@ button.has-mandarin-reading {
   min-width: 0;
   flex-direction: column;
   justify-content: center;
+}
+
+.hover-label,
+.hover-breakdown-label {
+  color: #9daa9d;
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
 }
 
 .hover-pinyin {
@@ -1906,14 +1930,55 @@ button.has-mandarin-reading {
   overflow-wrap: anywhere;
 }
 
+.hover-breakdown-label {
+  display: block;
+  margin: 10px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid #4b5850;
+}
+
+.hover-breakdown {
+  display: block;
+}
+
+.hover-character-row {
+  display: grid;
+  grid-template-columns: 24px minmax(48px, max-content) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.hover-character-glyph {
+  color: var(--cream);
+  font-family: var(--paper-font);
+  font-size: 19px;
+}
+
+.hover-character-pinyin {
+  color: var(--amber-hi);
+  font-size: 11px;
+}
+
+.hover-character-meaning {
+  color: #c7d2ca;
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 520px) {
   .sentence-pinyin {
     font-size: 0.5em !important;
   }
 
   .hanzi-hover-card {
-    grid-template-columns: 36px minmax(110px, 1fr);
     padding: 8px 9px;
+  }
+
+  .hover-word-row {
+    grid-template-columns: minmax(36px, max-content) minmax(110px, 1fr);
   }
 
   .hover-glyph {
