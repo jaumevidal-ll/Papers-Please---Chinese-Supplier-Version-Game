@@ -15,11 +15,12 @@ show_error() {
 }
 
 open_game() {
-  if [[ "${1:-}" == "" ]]; then return 1; fi
+  local game_revision="$(/usr/bin/cksum "$game_dir/index.html")"
+  local game_url="http://127.0.0.1:$1/?v=${game_revision%% *}"
   if [[ "${print_url_only:-0}" == 1 ]]; then
-    print -r -- "http://127.0.0.1:$1/"
+    print -r -- "$game_url"
   else
-    /usr/bin/open "http://127.0.0.1:$1/"
+    /usr/bin/open "$game_url"
   fi
 }
 
