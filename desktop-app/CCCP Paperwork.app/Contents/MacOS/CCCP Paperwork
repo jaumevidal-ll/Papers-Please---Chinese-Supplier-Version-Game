@@ -1,0 +1,68 @@
+#!/bin/zsh
+
+set -u
+
+launcher_dir="${0:A:h}"
+game_dir="${launcher_dir:h}/Resources/game"
+pid_file="/private/tmp/cccp-paperwork-server.pid"
+port_file="/private/tmp/cccp-paperwork-server.port"
+log_file="/private/tmp/cccp-paperwork-server.log"
+
+show_error() {
+  /usr/bin/osascript -e "display alert \"CCCP Paperwork\" message \"$1\" as critical buttons {\"OK\"} default button \"OK\""
+}
+
+open_game() {
+  /usr/bin/open "http://127.0.0.1:$1/"
+}
+
+if [[ -r "$pid_file" && -r "$port_file" ]]; then
+  existing_pid="$(<"$pid_file")"
+  existing_port="$(<"$port_file")"
+
+  if [[ "$existing_pid" == <-> && "$existing_port" == <-> ]] \
+    && /bin/kill -0 "$existing_pid" 2>/dev/null \
+    && /usr/bin/curl --fail --silent --show-error "http://127.0.0.1:${existing_port}/" >/dev/null 2>&1; then
+    open_game "$existing_port"
+    exit 0
+  fi
+fi
+
+python_bin="$(command -v python3 2>/dev/null || true)"
+if [[ -z "$python_bin" ]]; then
+  show_error "Python 3 is required to launch the local game server, but it was not found."
+  exit 1
+fi
+
+selected_port=""
+for candidate_port in {8765..8785}; do
+  if ! /usr/sbin/lsof -nP -iTCP:"$candidate_port" -sTCP:LISTEN >/dev/null 2>&1; then
+    selected_port="$candidate_port"
+    break
+  fi
+done
+
+if [[ -z "$selected_port" ]]; then
+  show_error "No free local port was found between 8765 and 8785."
+  exit 1
+fi
+
+/usr/bin/nohup "$python_bin" -m http.server "$selected_port" \
+  --bind 127.0.0.1 \
+  --directory "$game_dir" \
+  >>"$log_file" 2>&1 </dev/null &
+server_pid=$!
+
+print -r -- "$server_pid" >"$pid_file"
+print -r -- "$selected_port" >"$port_file"
+
+for attempt in {1..30}; do
+  if /usr/bin/curl --fail --silent --show-error "http://127.0.0.1:${selected_port}/" >/dev/null 2>&1; then
+    open_game "$selected_port"
+    exit 0
+  fi
+  /bin/sleep 0.1
+done
+
+show_error "The local game server did not start. Details were written to $log_file."
+exit 1
