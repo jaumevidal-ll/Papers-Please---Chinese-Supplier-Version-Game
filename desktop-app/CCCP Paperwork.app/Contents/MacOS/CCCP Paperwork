@@ -1,0 +1,90 @@
+#!/bin/zsh
+
+set -u
+
+launcher_dir="${0:A:h}"
+game_dir="${launcher_dir:h}/Resources/game"
+state_key="$(print -rn -- "$game_dir" | /usr/bin/cksum)"
+state_prefix="/private/tmp/cccp-paperwork-${UID}-${state_key%% *}"
+pid_file="${state_prefix}.pid"
+port_file="${state_prefix}.port"
+log_file="${state_prefix}.log"
+
+show_error() {
+  /usr/bin/osascript -e "display alert \"CCCP Paperwork\" message \"$1\" as critical buttons {\"OK\"} default button \"OK\""
+}
+
+open_game() {
+  local game_revision="$(/usr/bin/cksum "$game_dir/index.html")"
+  local game_url="http://127.0.0.1:$1/?v=${game_revision%% *}"
+  if [[ "${print_url_only:-0}" == 1 ]]; then
+    print -r -- "$game_url"
+  else
+    /usr/bin/open "$game_url"
+  fi
+}
+
+print_url_only=0
+if [[ "${1:-}" == "--print-url" ]]; then print_url_only=1; fi
+
+reuse_server() {
+  local record_pid_file="$1" record_port_file="$2"
+  [[ -r "$record_pid_file" && -r "$record_port_file" ]] || return 1
+  local existing_pid="$(<"$record_pid_file")"
+  local existing_port="$(<"$record_port_file")"
+  [[ "$existing_pid" == <-> && "$existing_port" == <-> ]] || return 1
+  local server_command="$(/bin/ps -p "$existing_pid" -o command= 2>/dev/null)"
+
+  if [[ "$server_command" == *" -m http.server ${existing_port} --bind 127.0.0.1 --directory ${game_dir}" ]] \
+    && /bin/kill -0 "$existing_pid" 2>/dev/null \
+    && /usr/bin/curl --fail --silent --show-error "http://127.0.0.1:${existing_port}/" >/dev/null 2>&1; then
+    print -r -- "$existing_pid" >"$pid_file"
+    print -r -- "$existing_port" >"$port_file"
+    open_game "$existing_port"
+    return 0
+  fi
+  return 1
+}
+
+reuse_server "$pid_file" "$port_file" && exit 0
+# Migrate an old server record only when it serves this exact app bundle.
+reuse_server /private/tmp/cccp-paperwork-server.pid /private/tmp/cccp-paperwork-server.port && exit 0
+
+python_bin="$(command -v python3 2>/dev/null || true)"
+if [[ -z "$python_bin" ]]; then
+  show_error "Python 3 is required to launch the local game server, but it was not found."
+  exit 1
+fi
+
+selected_port=""
+for candidate_port in {8765..8785}; do
+  if ! /usr/sbin/lsof -nP -iTCP:"$candidate_port" -sTCP:LISTEN >/dev/null 2>&1; then
+    selected_port="$candidate_port"
+    break
+  fi
+done
+
+if [[ -z "$selected_port" ]]; then
+  show_error "No free local port was found between 8765 and 8785."
+  exit 1
+fi
+
+/usr/bin/nohup "$python_bin" -m http.server "$selected_port" \
+  --bind 127.0.0.1 \
+  --directory "$game_dir" \
+  >>"$log_file" 2>&1 </dev/null &
+server_pid=$!
+
+print -r -- "$server_pid" >"$pid_file"
+print -r -- "$selected_port" >"$port_file"
+
+for attempt in {1..30}; do
+  if /usr/bin/curl --fail --silent --show-error "http://127.0.0.1:${selected_port}/" >/dev/null 2>&1; then
+    open_game "$selected_port"
+    exit 0
+  fi
+  /bin/sleep 0.1
+done
+
+show_error "The local game server did not start. Details were written to $log_file."
+exit 1
